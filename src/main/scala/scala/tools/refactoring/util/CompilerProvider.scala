@@ -74,7 +74,15 @@ trait TreeCreationMethods {
 
   protected def treeFromString(src: String, isJava: Boolean = false): global.Tree = {
     val file = new BatchSourceFile(UniqueNames.basename() + (if (isJava) ".java" else ""), src)
-    treeFrom(file)
+    try treeFrom(file)
+    finally {
+      // This avoids a race conditions in unit tests. I noticed that the backgroundCompile of the presentation
+      // compiler thread was run concurrently with ExtractionsTest.TestCollector.collect. If the background
+      // compile changes global.phase to packageobjects, a seemingly benign call to `Symbol.toString` via
+      // MemberScope.introducedInThisScope triggers type completion of the empty package class symbol and
+      // fails hard as this operation is not performed from the presentation compiler thread.
+      global.removeUnitOf(file)
+    }
   }
 
   def treeFrom(src: String): global.Tree = treeFromString(src, false)
