@@ -136,3 +136,5 @@ packageOptions in Compile in packageBin += {
   }
   Package.JarManifest(m)
 }
+
+testOptions in ThisBuild += Tests.Argument(TestFrameworks.JUnit, "-v", "-a")
